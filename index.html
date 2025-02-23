@@ -5,6 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katering</title>
     <link type="text/css" rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (window.jspdf && window.jspdf.jsPDF) {
+                console.log("✅ jsPDF is loaded successfully.");
+            } else {
+                console.error("❌ jsPDF is NOT loaded! Check the script source.");
+            }
+
+            window.generateMenuPdf = function (menuJson) {
+                try {
+                    var menus = JSON.parse(menuJson);
+                    var doc = new window.jspdf.jsPDF("p", "mm", "a4");
+
+                    // ✅ Set Title
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(18);
+                    doc.text("Menu Makanan", 105, 20, { align: "center" });
+
+                    // ✅ Table Headers
+                    const headers = [
+                        [
+                            { content: "Tanggal", rowSpan: 2, styles: { halign: "center", fillColor: [0, 0, 0], textColor: [255, 255, 255] } },
+                            { content: "Menu Makan", colSpan: 3, styles: { halign: "center", fillColor: [0, 0, 0], textColor: [255, 255, 255] } }
+                        ],
+                        [
+                            { content: "Pagi", styles: { halign: "center", fillColor: [64, 64, 64], textColor: [255, 255, 255] } },
+                            { content: "Siang", styles: { halign: "center", fillColor: [64, 64, 64], textColor: [255, 255, 255] } },
+                            { content: "Sore", styles: { halign: "center", fillColor: [64, 64, 64], textColor: [255, 255, 255] } }
+                        ]
+                    ];
+
+                    // ✅ Table Data - Ensure Data Exists
+                    const rows = menus.map(menu => [
+                        `${menu.day || ""}\n${menu.date || ""}`,  // "Tanggal"
+                        (menu.waktu?.pagi?.menu || ""),         // "Pagi"
+                        (menu.waktu?.siang?.menu || ""),        // "Siang"
+                        (menu.waktu?.sore?.menu || "")          // "Sore"
+                    ]);
+
+                    // ✅ Generate table using `autoTable`
+                    doc.autoTable({
+                        startY: 40,
+                        head: headers,
+                        body: rows,
+                        theme: "grid",
+                        styles: { fontSize: 12, halign: "center" },
+                        headStyles: { fillColor: [242, 242, 242], textColor: [255, 255, 255] }, // Default style (overridden per cell above)
+                        columnStyles: { 0: { cellWidth: 40 } } // "Tanggal" column wider
+                    });
+
+                    return new Uint8Array(doc.output("arraybuffer"));
+                } catch (e) {
+                    console.error("🚨 Error in generateMenuPdf:", e);
+                    return null;
+                }
+            };
+        });
+    </script>
+
+
     <script type="application/javascript" src="composeApp.js"></script>
 </head>
 <body>
